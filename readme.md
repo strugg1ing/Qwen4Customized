@@ -1,4 +1,5 @@
 ## 下载qwen2-7b-instruct-q5_k_m.gguf到本地 
+
 ```链接: https://pan.baidu.com/s/1HBfeneVZLh4eazFoi0FrNw?pwd=y6rg 提取码: y6rg 
 ```
 ## 配置环境
