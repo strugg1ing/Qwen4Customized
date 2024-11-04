@@ -1,7 +1,7 @@
 ## 下载qwen2-7b-instruct-q5_k_m.gguf到本地 
 
 ## 配置环境
-‘’‘
+
    pip install llama-cpp-python
    
    pip install openai
@@ -17,7 +17,7 @@
    pip install starlette_context
    
    pip install pydantic_settings
-‘’‘
+
 ## 启动Qwen2大模型
 #### n_ctx=20480代表单次回话最大20480个Token数量
     python -m llama_cpp.server \
