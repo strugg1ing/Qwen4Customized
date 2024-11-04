@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot with File Upload</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            background-color: white;
+            width: 100%;
+            max-width: 500px;
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-box {
+            padding: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #fafafa;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 75%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .user {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background-color: #f1f1f1;
+            align-self: flex-start;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            background-color: #ffffff;
+            border-top: 1px solid #ddd;
+            align-items: center;
+        }
+
+        .input-area input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s ease-in-out;
+        }
+
+        .input-area input:focus {
+            border-color: #007bff;
+        }
+
+        .input-area button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+
+        .upload-btn {
+            margin-left: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+            }
+
+            .input-area input {
+                padding: 10px;
+            }
+
+            .input-area button {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+        }
+
+        .typing {
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div id="chatBox" class="chat-box">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="请输入..." onkeypress="handleKeyPress(event)">
+            <label for="fileUpload" class="upload-btn">
+                <span>上传PDF</span>
+            </label>
+            <input type="file" id="fileUpload" style="display: none;" accept=".pdf" onchange="handleFileUpload(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+            <!-- 上传成功提示框，放置在输入框上方 -->
+        <div id="uploadTips" style="display:none; text-align: center; background-color:#4CAF50; color:white; padding:10px; border-radius:5px; margin-bottom:10px;">
+            文件上传成功
+        </div>     
+    </div>
+
+    <script>
+        let typingElement;
+        let currentMessageElement;
+        let eventSource = null;
+
+        // Function to handle sending messages
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+
+            if (message === '') return;
+
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            addMessageToChat('user', message);
+
+            showTypingIndicator();
+
+            eventSource = new EventSource(`/chat?message=${encodeURIComponent(message)}`);
+            currentMessageElement = null;
+
+            eventSource.onmessage = function(event) {
+                if (!currentMessageElement) {
+                    currentMessageElement = addMessageToChat('bot', '');
+                }
+                currentMessageElement.textContent += event.data;
+
+                if (event.data === "[DONE]") {
+                    removeTypingIndicator();
+                    eventSource.close();
+                }
+            };
+
+            eventSource.onerror = function(event) {
+                if (eventSource.readyState !== EventSource.CLOSED) {
+                    removeTypingIndicator();
+                    eventSource.close();
+                }
+            };
+
+            userInput.value = '';
+        }
+
+        function addMessageToChat(role, message) {
+            const chatBox = document.getElementById('chatBox');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message ' + role;
+            messageElement.textContent = message;
+            chatBox.appendChild(messageElement);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return messageElement;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function showTypingIndicator() {
+            const chatBox = document.getElementById('chatBox');
+            typingElement = document.createElement('div');
+            typingElement.className = 'message bot typing';
+            typingElement.textContent = '机器人正在输入...';
+            chatBox.appendChild(typingElement);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            if (typingElement) {
+                typingElement.remove();
+                typingElement = null;
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.fileName) {
+                        // 提示上传成功
+                        showUploadSuccess();
+
+                        // 调用 /process-file 路由来处理上传的 PDF
+                        fetch(`/process-file?filename=${data.fileName}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Processed PDF text:', data.output);
+                            })
+                            .catch(error => {
+                                console.error('Error processing file:', error);
+                            });
+                    } else {
+                        showUploadError();
+                    }
+                })
+                .catch(error => {
+                    showUploadError();
+                    console.error('Error:', error);
+                });
+                //清空文件选择框，确保可以再次触发 onchange 事件
+                document.getElementById('fileUpload').value = '';
+            }
+        }
+
+        function showUploadSuccess() {
+            const tips = document.getElementById('uploadTips');
+            tips.style.backgroundColor = '#4CAF50';  // 绿色提示框
+            tips.textContent = '文件上传成功';
+            tips.style.display = 'block';
+            
+            // 3秒后自动隐藏提示框
+            setTimeout(() => {
+                tips.style.display = 'none';
+            }, 6000);
+        }
+
+        function showUploadError() {
+            const tips = document.getElementById('uploadTips');
+            tips.style.backgroundColor = '#f44336';  // 红色提示框
+            tips.textContent = '文件上传失败';
+            tips.style.display = 'block';
+            
+            // 3秒后自动隐藏提示框
+            setTimeout(() => {
+                tips.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+</body>
+</html>
