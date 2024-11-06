@@ -11,7 +11,7 @@
    pip install fastapi
    pip install sse_starlette
    pip install starlette_context
-   pip install pydantic_settings’
+   pip install pydantic_settings
 ```
 ## 启动Qwen2大模型
 #### n_ctx=20480代表单次回话最大20480个Token数量
