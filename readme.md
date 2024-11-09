@@ -1,8 +1,8 @@
 ## 下载qwen2-7b-instruct-q5_k_m.gguf到本地 
+```
+https://www.modelscope.cn/models/Embedding-GGUF/gte-Qwen2-7B-instruct-Q5_K_M-GGUF/resolve/master/gte-qwen2-7b-instruct-q5_k_m.gguf
+```
 
-```
-链接: https://pan.baidu.com/s/1HBfeneVZLh4eazFoi0FrNw?pwd=y6rg 提取码: y6rg 
-```
 ## 配置环境
 ```pip install llama-cpp-python
    pip install openai
